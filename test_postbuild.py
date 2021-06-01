@@ -25,6 +25,15 @@ class PacketFieldOffset(Packet):
             else:
                 p = f.addfield(self, p, val)
         return super().self_build(field_pos_list)
+
+    def post_build(self, pkt, pay):
+        for f_name, lbd in self.post_value.items():
+            if not getattr(self, f_name, None):
+                f = self.get_field(f_name)
+                off = self.fields_off[f]
+                start = f.addfield(pkt, pkt[:off], lbd(pkt, pay))
+                pkt = start + pkt[len(start):]
+        return pkt
     
 class AsciiIntField(StrFixedLenField):
     """
@@ -56,16 +65,8 @@ class TestPacket(PacketFieldOffset):
         XIntField("dummy", default=10)
     ]
 
-    def post_build(self, pkt, pay):
-        post = {"full_len" : (lambda pkt, pay: len(pkt)+len(pay)),
-                "self_len" : (lambda pkt, pay: len(pkt))}
-        for f_name, lbd in post.items():
-            if not getattr(self, f_name, None):
-                f = self.get_field(f_name)
-                off = self.fields_off[f]
-                start = f.addfield(pkt, pkt[:off], lbd(pkt, pay))
-                pkt = start + pkt[len(start):]
-        return pkt
+    post_value = {"full_len" : (lambda pkt, pay: len(pkt)+len(pay)),
+                  "self_len" : (lambda pkt, pay: len(pkt))}
 
 test = TestPacket(dummy=19)
 test.show2()
