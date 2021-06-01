@@ -33,13 +33,12 @@ class PacketFieldOffset(Packet):
                 off = self.fields_off[f]
                 start = f.addfield(pkt, pkt[:off], lbd(pkt, pay))
                 pkt = start + pkt[len(start):]
-        return pkt
-    
+        return pkt+pay
+
 class AsciiIntField(StrFixedLenField):
     """
     Field containing an ASCII encoded int
     """
-
     __slots__ = ["length"]
 
     def __init__(self, *args, **kwargs):
